@@ -102,3 +102,11 @@ venv.bak/
 
 # mypy
 .mypy_cache/
+
+# project-specific
+extracted-news-items.json
+images/*.jpg
+scraped/*.bz2
+news/*.eml
+processed/*.eml
+.vscode/

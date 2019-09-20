@@ -1,0 +1,14 @@
+python-dateutil
+
+requests
+
+# beautiful soup 4: helps scrape html / xml
+beautifulsoup4
+
+# topic modelling, document indexing, similarity retrieval
+# (NLP)
+gensim
+
+# image library
+pillow
+
