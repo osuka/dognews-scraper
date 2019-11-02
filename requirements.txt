@@ -12,3 +12,5 @@ gensim
 # image library
 pillow
 
+# marshmallow (serialization alternative to std lib json, pickle etc)
+marshmallow

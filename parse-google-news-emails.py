@@ -27,6 +27,10 @@ from gensim.summarization import summarize
 # pillow - image parsing/generation
 from PIL import Image, ImageOps
 
+# marshmallow - serialization
+from dataclasses import dataclass, field
+from marshmallow import Schema, fields
+
 # to detect/remove duplicates
 usedKeys = set()
 
@@ -41,6 +45,98 @@ badwords = [
     'brain-damage', 'brain-damaged',
 ]
 
+# notes on https://docs.python.org/3/library/dataclasses.html, they
+# automatically generate __init__ and __repr__ (like a 'tostring')
+
+@dataclass
+class NewsItemRating:
+    rating: int
+    date: datetime = datetime.utcnow()
+
+class NewsItemRatingSchema(Schema):
+    rating = fields.Integer()
+    date = fields.DateTime()
+
+
+@dataclass
+class NewsItem:
+    # internal fields
+    id: str = field(init=False)
+
+    # mandatory fields
+    url: str
+    date: datetime
+    title: str
+    source: str
+    submitter: str
+    ratings: dict = field(default_factory=dict)  # string:Rating
+
+    fetch_date: datetime = datetime.utcnow()
+
+    # stubs for properties that come from OpenGraph
+    image: str = None
+    type: str = None
+
+    # calculated properties
+    body: str = None   # small description, either manual or coming from google news or og
+
+    cached_page: str = None  # local file name where the scraped HTML is saved
+    thumbnail: str = None  # local file name of a generated thumbnail
+
+    summary: str = None
+    sentiment: str = None   # sentiment currently is empty or 'bad'
+
+    def __post_init__(self):
+        self.generate_id()
+
+    def generate_id(self):   # generates the id field, from the url
+        self.id = hashlib.md5(self.url.encode('utf-8')).hexdigest()
+
+    def set_url(self, url):
+        self.url = url
+        self.generate_id()
+
+    def set_og_prop(self, prop_name, prop_value):
+        # props that come directly from the opengraph standard
+        # we only store a few
+        if prop_name == 'image':
+            self.image = prop_value
+        elif prop_name == 'title':
+            self.title = prop_value
+        elif prop_name == 'type':
+            self.type = prop_value
+        elif prop_name == 'url':
+            self.set_url(prop_value)
+
+    def add_rating(self, user, rating):
+        # rating is a Rating instance
+        assert(isinstance(rating, NewsItemRating))
+        self.ratings[user] = rating
+
+class NewsItemSchema(Schema):
+    id = fields.String()
+    url = fields.String()
+    date = fields.DateTime()
+    title = fields.String()
+    source = fields.String()
+    submitter = fields.String()
+    ratings = fields.Dict(keys=fields.String(), values=fields.Nested(NewsItemRatingSchema))
+    fetch_date = fields.DateTime()
+    image = fields.String()
+    type = fields.String()
+    body = fields.String()
+    cached_page = fields.String()
+    thumbnail = fields.String()
+    summary = fields.String()
+    sentiment = fields.String()
+
+
+class NewsItemListSchema(Schema):
+    items = fields.List(fields.Nested(NewsItemSchema))
+
+
+# ----------------------------------------------------------------------------
+
 
 def get_arguments():
     '''parse provided command line arguments
@@ -51,6 +147,7 @@ def get_arguments():
                         'looking for them')
     return parser.parse_args()
 
+# -------------------------------------------------------------------------------
 
 def find_email_files(root):
     '''finds all raw email files from a directory - accepts also file names
@@ -108,19 +205,39 @@ def random_headers():
             'q=0.9,image/webp,*/*;q=0.8'
             }
 
+# -------------------------------------------------------------------------------
+def scrape_item(item):
+    '''
+        Parses the actual news article and tries to extract extra info
+        Anything discovered is added as properties to the item object
+    '''
+    page_contents = load_article(item)
+    soup = bs4.BeautifulSoup(page_contents, features='html.parser')
+    fill_in_opengraph_properties(item, soup)
+    summarise_article(item, soup)
+    sentiment_analysis(item)
+    generate_thumbnail(item)
 
-# return file name with path - if not found creates 1x1 image and returns that
-def get_thumbnail(imageUrl):
-    # we want this name to be a hash of the url in case we find it in various
-    # darticles or repeated
-    hashName = hashlib.md5(imageUrl.encode('utf-8')).hexdigest()
+def generate_thumbnail(item):
+    '''
+    Creates a thumbnail for the image pointed by the URL - if it can't be loaded
+    a 1x1 image used. The thumbnail reference is stored in the news item instance
+
+    It caches images downloaded as they can be referred to from multiple places
+    The cache IDs are based on the URL of the image
+    '''
+    if not item.image:
+        return
+
+    hashName = hashlib.md5(item.image.encode('utf-8')).hexdigest()
     name = 'images/' + hashName + '.jpg'
     if os.path.isfile(name):
-        return name  # we already retrieved this
+        item.thumbnail = name
+        return
 
     try:
-        print('  - load image ' + imageUrl + ' [' + hashName + ']')
-        r = requests.get(imageUrl, timeout=30, stream=True,
+        print('  - load image ' + item.image + ' [' + hashName + ']')
+        r = requests.get(item.image, timeout=30, stream=True,
                          headers=random_headers())
         if r.status_code == 200:
             img = Image.open(r.raw)
@@ -138,48 +255,30 @@ def get_thumbnail(imageUrl):
         new_img = Image.new('RGB', (1, 1))
         new_img.save(name, format='JPEG', quality=96)
     finally:
-        return name
-
-# Parses the actual news article and tries to extract extra info
-# returns an object which whatever it found (contents, thumbnail, image, ..)
+        item.thumbnail = name
 
 
-# Check opengraph protocol meta info (https://ogp.me/)
-# <meta property="og:image" content="https://xxxx/xxxx.jpg"/>
-def setTagToProp(tags, soup, propName):
-    prop = soup.find("meta", property='og:' + propName, content=True)
-    if prop:
-        tags[propName] = prop.attrs['content']
-
-
-def generate_extra_tags(hashName, url, title):
-    tags = {}
-
-    name = 'scraped/' + hashName + '.html.bz2'
-    tags['scraped_html'] = name
-    page = None
-    if os.path.isfile(name):
-        # print(' read ' + url + ' [' + hashName + ']')
-        with bz2.open(name, 'rt', encoding='utf-8') as f:
-            page = f.read()   # we only keep whatever is read in 1 call
-    else:
-        try:
-            print(' get ' + url)
-            r = requests.get(url, timeout=30, headers=random_headers())
-            page = r.text
-        except Exception:
-            page = 'Could not load ' + url + '\n' + traceback.format_exc()
-        with bz2.open(name, 'wt', encoding='utf-8') as f:
-            f.write(page)
-
-    soup = bs4.BeautifulSoup(page, features='html.parser')
-
-    # Extract opengraph protocol metadata, replace what we have it needed
+def fill_in_opengraph_properties(item, soup):
+    '''
+    Receives a beautiful soup instance and looks in it for open graph properties
+    to be added to the news item
+    * Check opengraph protocol meta info (https://ogp.me/)
+    * In HTML props look like: <meta property="og:image" content="https://xxxx/xxxx.jpg"/>
+    '''
     for prop in ['image', 'title', 'type', 'url']:
-        setTagToProp(tags, soup, prop)
+        value = soup.find("meta", property='og:' + prop, content=True)
+        if value:
+            item.set_og_prop(prop, value.attrs['content'])
 
-    # very simple attempt at summarising based on
-    # https://towardsdatascience.com/easily-scrape-and-summarize-news-articles-using-python-dfc7667d9e74
+
+def summarise_article(item, soup):
+    '''
+    Creates a summary of an html page (passed in as a BeautifulSoup instance) and stores it into
+    the item instance provided.
+    * If the contents is too small, it will simply be added as is
+    * Currently it's a very simple attempt at summarising based on
+     https://towardsdatascience.com/easily-scrape-and-summarize-news-articles-using-python-dfc7667d9e74
+    '''
     all_p = soup.find_all('p')
     all_p_text = [node.get_text().lower().strip() for node in all_p]
     # Filter out sentences that are probably not sentences
@@ -192,33 +291,47 @@ def generate_extra_tags(hashName, url, title):
     article = ' '.join(sentence_list)
     if len(sentence_list) > 3:
         # ratio is how many lines vs the original article to return
-        tags['summary'] = summarize(article, ratio=0.2)
+        item.summary = summarize(article, ratio=0.2)
     else:
-        tags['summary'] = '\n'.join(sentence_list)
+        item.summary = '\n'.join(sentence_list)
 
-    article_words = article.split()
-    if 'title' in tags and tags['title']:
-        title = tags['title']  # it may have been overwritten
-    if title:
-        article_words += title.split()
+def sentiment_analysis(item):
+    '''
+    Placeholder for propert sentiment analysis. Currently it's a simple word search
+    '''
+    article_words = item.summary.split()
+    if item.title:
+        article_words += item.title.split()
     if any(badword in article_words for badword in badwords):
-        tags['sentiment'] = 'bad'
-        if 'ratings' not in tags:
-            botRating = {}
-            botRating['rating'] = -1
-            botRating['date'] = datetime.utcnow().isoformat()
-            tags['ratings'] = {'bot': botRating}
+        item.sentiment = 'bad'
+        item.add_rating('bot', NewsItemRating(-1))  # bot disapproves
 
-    # img = load_image(image)
-    # create thumbnail, 512x12
-    # convert /tmp/thumb -resize 512 "${thumbname}"
-    if 'image' in tags:
-        thumbFileName = get_thumbnail(tags['image'])
-        if thumbFileName:
-            tags['thumbnail'] = thumbFileName
+def load_article(item):
+    '''
+    Loads the url of an article for parsing, and caches it so it's only
+    fetched if it hasn't been fetched before. A reference to the
+    cached location is stored on the item instance.
+    '''
+    name = 'scraped/' + item.id + '.html.bz2'
+    item.cached_page = name
+    page_contents = None
+    if os.path.isfile(name):
+        # print(' read cached ' + url + ' [' + hashName + ']')
+        with bz2.open(name, 'rt', encoding='utf-8') as f:
+            page_contents = f.read()   # we only keep whatever is read in 1 call
+    else:
+        try:
+            print(' get ' + item.url)
+            r = requests.get(item.url, timeout=30, headers=random_headers())
+            page_contents = r.text
+        except Exception:
+            page_contents = 'Could not load ' + item.url + '\n' + traceback.format_exc()
+        with bz2.open(name, 'wt', encoding='utf-8') as f:
+            f.write(page_contents)
 
-    return tags
+    return page_contents
 
+# -------------------------------------------------------------------------------
 
 def parse_email(startdate, msg):
     date = msg['Date']
@@ -270,33 +383,24 @@ def analyse_email(date, contents):
             url = line[1:-1]
             o = urlsplit(url)
             url = parse_qs(o.query)['url'][0]
-            hashName = hashlib.md5(url.encode('utf-8')).hexdigest()
-            if hashName in usedKeys:
+
+            # we have a full object
+            datetimeObj = date_parse(date)
+            item = NewsItem(url=url, date=datetimeObj, title=title, source=source, submitter='googlenews')
+            if item.id in usedKeys:
+                # we've seen this exact article before
                 continue
-            usedKeys.add(hashName)
-            data = {}
-            dateObj = date_parse(date)
-            data['id'] = hashName
-            data['date'] = dateObj.isoformat()
-            data['fetch_date'] = datetime.utcnow().isoformat()
-            data['url'] = url
-            data['title'] = title
-            data['source'] = source
-            data['submitter'] = 'googlenews'
-            # note:
-            # data['ratings'] =  [{ osuka: { rating: 4, date: xxx },
-            #                      pepe: { ... }... ]
-            data['body'] = body
-            extendedProps = generate_extra_tags(hashName, url, title)
-            for prop in extendedProps:
-                data[prop] = extendedProps[prop]
-            items.append(data)
+            usedKeys.add(item.id)
+            item.body = body
+            scrape_item(item)
+            items.append(item)
 
         else:
             body = body + line + ' '
 
     return items
 
+# -------------------------------------------------------------------------------
 
 def main(files):
 
@@ -334,7 +438,9 @@ def main(files):
 
     # uploading is done by a separate process
     with open('extracted-news-items.json', 'w') as writer:
-        writer.write(json.dumps(items, indent=2, sort_keys=True))
+        serialized = NewsItemListSchema().dump({ "items": items })  # as object using base python types
+        writer.write(json.dumps(serialized, indent=2, sort_keys=True))  # as json
+
 
 if __name__ == '__main__':
     args = get_arguments()
