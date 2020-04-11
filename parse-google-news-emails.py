@@ -61,7 +61,7 @@ class NewsItemRating:
 
 
 class NewsItemRatingSchema(Schema):
-    # user = fields.String()  auto generated
+    user = fields.String()  # auto generated
     rating = fields.Integer()
     date = fields.DateTime()
 
