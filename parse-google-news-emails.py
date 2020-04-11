@@ -2,6 +2,8 @@
 # vim: tabstop=8 expandtab shiftwidth=4 softtabstop=4
 # python style conventions https://www.python.org/dev/peps/pep-0008/
 
+import sys
+import netrc
 import email
 import hashlib
 import json
@@ -45,15 +47,21 @@ badwords = [
     'brain-damage', 'brain-damaged',
 ]
 
+banned_domains = [
+]
+
 # notes on https://docs.python.org/3/library/dataclasses.html, they
 # automatically generate __init__ and __repr__ (like a 'tostring')
+
 
 @dataclass
 class NewsItemRating:
     rating: int
     date: datetime = datetime.utcnow()
 
+
 class NewsItemRatingSchema(Schema):
+    # user = fields.String()  auto generated
     rating = fields.Integer()
     date = fields.DateTime()
 
@@ -64,12 +72,12 @@ class NewsItem:
     id: str = field(init=False)
 
     # mandatory fields
-    url: str
+    target_url: str
     date: datetime
     title: str
     source: str
     submitter: str
-    ratings: dict = field(default_factory=dict)  # string:Rating
+    ratings: list = field(default_factory=list)
 
     fetch_date: datetime = datetime.utcnow()
 
@@ -90,10 +98,10 @@ class NewsItem:
         self.generate_id()
 
     def generate_id(self):   # generates the id field, from the url
-        self.id = hashlib.md5(self.url.encode('utf-8')).hexdigest()
+        self.id = hashlib.md5(self.target_url.encode('utf-8')).hexdigest()
 
-    def set_url(self, url):
-        self.url = url
+    def set_url(self, target_url):
+        self.target_url = target_url
         self.generate_id()
 
     def set_og_prop(self, prop_name, prop_value):
@@ -108,19 +116,20 @@ class NewsItem:
         elif prop_name == 'url':
             self.set_url(prop_value)
 
-    def add_rating(self, user, rating):
+    def add_rating(self, rating):
         # rating is a Rating instance
         assert(isinstance(rating, NewsItemRating))
-        self.ratings[user] = rating
+        self.ratings.append(rating)
+
 
 class NewsItemSchema(Schema):
     id = fields.String()
-    url = fields.String()
+    target_url = fields.String()
     date = fields.DateTime()
     title = fields.String()
     source = fields.String()
     submitter = fields.String()
-    ratings = fields.Dict(keys=fields.String(), values=fields.Nested(NewsItemRatingSchema))
+    ratings = fields.List(fields.Nested(NewsItemRatingSchema))
     fetch_date = fields.DateTime()
     image = fields.String()
     type = fields.String()
@@ -142,12 +151,16 @@ def get_arguments():
     '''parse provided command line arguments
     '''
     parser = argparse.ArgumentParser()
+    parser.add_argument('--output', help='Where to send the output - use https URL to POST '
+                        'to the dognews server API, or a file name to save locally as json',
+                        default='./extracted-news-items.json')
     parser.add_argument('files', nargs='+',
                         help='email filenames and/or directories to traverse '
                         'looking for them')
     return parser.parse_args()
 
 # -------------------------------------------------------------------------------
+
 
 def find_email_files(root):
     '''finds all raw email files from a directory - accepts also file names
@@ -206,6 +219,8 @@ def random_headers():
             }
 
 # -------------------------------------------------------------------------------
+
+
 def scrape_item(item):
     '''
         Parses the actual news article and tries to extract extra info
@@ -217,6 +232,7 @@ def scrape_item(item):
     summarise_article(item, soup)
     sentiment_analysis(item)
     generate_thumbnail(item)
+
 
 def generate_thumbnail(item):
     '''
@@ -268,6 +284,8 @@ def fill_in_opengraph_properties(item, soup):
     for prop in ['image', 'title', 'type', 'url']:
         value = soup.find("meta", property='og:' + prop, content=True)
         if value:
+            if prop == 'url':
+                prop = 'target_url'
             item.set_og_prop(prop, value.attrs['content'])
 
 
@@ -295,6 +313,9 @@ def summarise_article(item, soup):
     else:
         item.summary = '\n'.join(sentence_list)
 
+    if len(item.summary) > 4000:
+        item.summary = item.summary[:4000]
+
 def sentiment_analysis(item):
     '''
     Placeholder for propert sentiment analysis. Currently it's a simple word search
@@ -304,7 +325,14 @@ def sentiment_analysis(item):
         article_words += item.title.split()
     if any(badword in article_words for badword in badwords):
         item.sentiment = 'bad'
-        item.add_rating('bot', NewsItemRating(-1))  # bot disapproves
+        item.add_rating(NewsItemRating(-1))  # bot disapproves
+
+    # we search also inside aiming to detect references like google amp's
+    # 'https://www.google.com/amp/www.example.com/amp.doc.html'
+    if any(badword in item.target_url.split('/') for badword in banned_domains):
+        item.sentiment = 'bad'
+        item.add_rating(NewsItemRating(-1))  # bot disapproves
+
 
 def load_article(item):
     '''
@@ -316,22 +344,23 @@ def load_article(item):
     item.cached_page = name
     page_contents = None
     if os.path.isfile(name):
-        # print(' read cached ' + url + ' [' + hashName + ']')
+        # print(' read cached ' + target_url + ' [' + hashName + ']')
         with bz2.open(name, 'rt', encoding='utf-8') as f:
             page_contents = f.read()   # we only keep whatever is read in 1 call
     else:
         try:
-            print(' get ' + item.url)
-            r = requests.get(item.url, timeout=30, headers=random_headers())
+            print(' get ' + item.target_url)
+            r = requests.get(item.target_url, timeout=30, headers=random_headers())
             page_contents = r.text
         except Exception:
-            page_contents = 'Could not load ' + item.url + '\n' + traceback.format_exc()
+            page_contents = 'Could not load ' + item.target_url + '\n' + traceback.format_exc()
         with bz2.open(name, 'wt', encoding='utf-8') as f:
             f.write(page_contents)
 
     return page_contents
 
 # -------------------------------------------------------------------------------
+
 
 def parse_email(startdate, msg):
     date = msg['Date']
@@ -361,7 +390,7 @@ def analyse_email(date, contents):
 
     title = ''
     source = ''
-    url = ''
+    target_url = ''
     body = ''
     for line in str(contents).replace('\\r', '').split('\\n'):
         line = remove_escapes(line)
@@ -373,20 +402,21 @@ def analyse_email(date, contents):
         elif line == '':
             title = ''
             source = ''
-            url = ''
+            target_url = ''
             body = ''
         elif title == '':
             title = line
         elif source == '':
             source = line
         elif line.startswith('<http'):
-            url = line[1:-1]
-            o = urlsplit(url)
-            url = parse_qs(o.query)['url'][0]
+            target_url = line[1:-1]
+            o = urlsplit(target_url)
+            target_url = parse_qs(o.query)['url'][0]
 
             # we have a full object
             datetimeObj = date_parse(date)
-            item = NewsItem(url=url, date=datetimeObj, title=title, source=source, submitter='googlenews')
+            item = NewsItem(target_url=target_url, date=datetimeObj, title=title,
+                            source=source, submitter='googlenews')
             if item.id in usedKeys:
                 # we've seen this exact article before
                 continue
@@ -402,7 +432,44 @@ def analyse_email(date, contents):
 
 # -------------------------------------------------------------------------------
 
-def main(files):
+# DOG NEWS API
+
+def post_articles(server, items):
+    for item in items:
+        itemJson = NewsItemSchema().dump(item)
+
+        print('  - Posting %s' % item.title)
+        # print(itemJson)
+        r = requests.post('%s/newsItem/' % server, timeout=30, json=itemJson)
+        if r.status_code in [401, 403]:
+            print('    %d error code - failed to login' % (r.status_code))
+            print(r.request.headers)
+            print('    make sure to define a .netrc file with credentials like:')
+            print('    (check https://ec.haxx.se/usingcurl/usingcurl-netrc)')
+            print('''
+                machine yourserver.com
+                login yourusername
+                password yourpassword
+                ''')
+            # Attempt to open it, this will usually raise an exception, like invalid format etc
+            if netrc.netrc():
+                print('   you seem to have a netrc valid file, may be missing the domain')
+            sys.exit()
+        elif r.status_code in [400, 500]:
+            if 'already exists' in r.text:
+                print('    already exists, ignored')
+                continue
+            print('    %d critical error received' % r.status_code)
+            print(r.request.body)
+            print('    ERROR --->', r.text)
+            sys.exit()
+        elif r.status_code not in [200, 201]:
+            print('    %d error' % (r.status_code))
+        else:
+            print('    ok')
+
+
+def main(output, files):
 
     startdate = datetime.strptime('17/12/2018', '%d/%m/%Y')
 
@@ -437,11 +504,17 @@ def main(files):
                 os.rename(filename, f'./processed/{name}')
 
     # uploading is done by a separate process
-    with open('extracted-news-items.json', 'w') as writer:
-        serialized = NewsItemListSchema().dump({ "items": items })  # as object using base python types
-        writer.write(json.dumps(serialized, indent=2, sort_keys=True))  # as json
+    if not output.startswith('http'):
+        # in this case, server is a file name
+        with open(output, 'w') as writer:
+            serialized = NewsItemListSchema().dump(
+                {"items": items})  # as object using base python types
+            writer.write(json.dumps(serialized, indent=2,
+                                    sort_keys=True))  # as json
+    else:
+        post_articles(output, items)
 
 
 if __name__ == '__main__':
     args = get_arguments()
-    main(args.files)
+    main(output=args.output, files=args.files)

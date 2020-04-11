@@ -29,7 +29,7 @@ Currently Uses:
 
 ## Setup
 
-This is a very simple project: use virtualenv to generate a python3 based environment, pip install -r requirements.txt and run the script. You will need to provide raw email messages as received from google news to test it.
+This is a very simple project: use virtualenv to generate a python3.7 based environment, pip install -r requirements.txt and run the script. You will need to provide raw email messages as received from google news to test it.
 
 Recommended setup: if you have docker available (even in a remote machine), I highly recommend using [Visual Studio Code Containers](./README-VSC-Container.md). This allows you to have an isolated environment to work on this, and you can use VSC's terminal to run it in an isolated way. When ran in this way, Visual Studio will have the required dependencies for python editing.
 
