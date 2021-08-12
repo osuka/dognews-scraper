@@ -13,6 +13,6 @@ nvm use
 [ -f package-lock.json ] && npm ci || npm i
 
 # setup python and packages
-virtualenv -p python3 venv
-. ./venv/bin/activate
+virtualenv -p python3 .venv
+. ./.venv/bin/activate
 pip install -r requirements.txt

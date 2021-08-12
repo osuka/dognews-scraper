@@ -43,3 +43,54 @@ Simply run the `parse-google-news-emails.py` script.
 * Cached contents is stored in the folder `scraped/` (this helps for re-runs, but also it's not uncommon to see the same link multiple times)
 * Both of these folders are safe to clear at any time
 * Processed files are moved to `processed/`
+
+## DEV notes
+
+Creating the API client. We are using a django rest framework based API that exposes an OpenAPI 3.0 schema and we explore a couple of ways to automatically generate a client:
+
+### Generating using the openapi-generator
+
+This is a nodejs wrapper of the multi-language generator [openapi-generator](https://github.com/OpenAPITools/openapi-generator) that makes running it a lot easier.
+
+Check the [generator documentation](https://github.com/openapitools/openapi-generator-cli) for instructions on how to use these kind of clients.
+
+You can check [the list of generators](https://github.com/OpenAPITools/openapi-generator/blob/master/docs/generators/). For python it creates clients but can also create a variety of servers (which we don't need but good to know).
+* python-aiohttp (generates a server app using the async io http library aiohttp)
+* python-fastapi.md (generates a server app using fastapi)
+* python-blueplanet.md (generates a server app for blueplanet, whatever that is)
+* python-flask.md (generates a server app in flask, including models etc)
+* python.md (generates a client that uses urllib, asyncio or tornado)
+* python-legacy.md (generates a client that uses urllib3 but uses six for python2 compatibility)
+
+Those documents contain the possible parameters. We are using the default [`python`](https://github.com/OpenAPITools/openapi-generator/blob/master/docs/generators/python.md) generator. We will use these two:
+
+* generateSourceCodeOnly: otherwise it creates a full python package with setup scripts, tests etc
+* library: asyncio, tornado, urllib3
+
+```bash
+❯ npx @openapitools/openapi-generator-cli generate -i ../dognews-server/openapi-schema.yml -g python -o . --additional-properties=generateSourceCodeOnly=true,library=urllib3
+```
+
+This creates:
+
+```text
+openapi_client/  folder with models, client etc
+.openapi-generator/  folder with a kind of manifest of all that is created (FILES, VERSION)
+.openapi-generator-ignore  file where we can declare names of files we don't want the generator to override
+openapi_client_README.md  explains how to use the library
+```
+
+The [generated readme](./openapi_client_README.md) contains excellent docs on how to use it.
+
+### Generating using openapi-python-client
+
+This is a library aiming to solve some of the issues from the generic `openapi-generator` approach: namely usage of python-specific modern features.
+
+The documentation is at [openapi-python-client](https://pypi.org/project/openapi-python-client/).
+
+```bash
+❯ openapi-python-client generate --url http://localhost:8000/api/schema/ --meta none
+Generating dognews-server-api-client
+```
+
+> --meta-none prevents it from creating a folder with [poetry](https://python-poetry.org/) configuration since we just want it as a local python module

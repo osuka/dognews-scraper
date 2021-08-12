@@ -2,15 +2,24 @@ python-dateutil
 
 requests
 
+# the generated openapi client uses this library
+urllib3
+
 # beautiful soup 4: helps scrape html / xml
 beautifulsoup4
 
 # topic modelling, document indexing, similarity retrieval
 # (NLP)
-gensim
+# note: version 4 removes the summarisation packages that we use
+# https://radimrehurek.com/gensim_3.8.3/summarization/summariser.html
+# TextRank summariser
+gensim==3.8.3
 
 # image library
 pillow
 
 # marshmallow (serialization alternative to std lib json, pickle etc)
 marshmallow
+
+# optional: better repl
+ipython
