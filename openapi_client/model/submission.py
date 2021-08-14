@@ -95,6 +95,7 @@ class Submission(ModelNormal):
             'target_url': (str,),  # noqa: E501
             'status': (str,),  # noqa: E501
             'owner': (str,),  # noqa: E501
+            'fetch': (str,),  # noqa: E501
             'title': (str,),  # noqa: E501
             'description': (str,),  # noqa: E501
             'date': (datetime, none_type,),  # noqa: E501
@@ -111,6 +112,7 @@ class Submission(ModelNormal):
         'target_url': 'target_url',  # noqa: E501
         'status': 'status',  # noqa: E501
         'owner': 'owner',  # noqa: E501
+        'fetch': 'fetch',  # noqa: E501
         'title': 'title',  # noqa: E501
         'description': 'description',  # noqa: E501
         'date': 'date',  # noqa: E501
@@ -121,13 +123,14 @@ class Submission(ModelNormal):
         'url',  # noqa: E501
         'status',  # noqa: E501
         'owner',  # noqa: E501
+        'fetch',  # noqa: E501
     }
 
     _composed_schemas = {}
 
     @classmethod
     @convert_js_args_to_python_args
-    def _from_openapi_data(cls, id, url, target_url, status, owner, *args, **kwargs):  # noqa: E501
+    def _from_openapi_data(cls, id, url, target_url, status, owner, fetch, *args, **kwargs):  # noqa: E501
         """Submission - a model defined in OpenAPI
 
         Args:
@@ -136,6 +139,7 @@ class Submission(ModelNormal):
             target_url (str):
             status (str):
             owner (str):
+            fetch (str):
 
         Keyword Args:
             _check_type (bool): if True, values for parameters in openapi_types
@@ -203,6 +207,7 @@ class Submission(ModelNormal):
         self.target_url = target_url
         self.status = status
         self.owner = owner
+        self.fetch = fetch
         for var_name, var_value in kwargs.items():
             if var_name not in self.attribute_map and \
                         self._configuration is not None and \

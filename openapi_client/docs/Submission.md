@@ -10,6 +10,7 @@ Name | Type | Description | Notes
 **target_url** | **str** |  | 
 **status** | **str** |  | [readonly] 
 **owner** | **str** |  | [readonly] 
+**fetch** | **str** |  | [readonly] 
 **title** | **str** |  | [optional] 
 **description** | **str** |  | [optional] 
 **date** | **datetime, none_type** |  | [optional] 

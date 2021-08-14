@@ -677,9 +677,11 @@ class SubmissionsApi(object):
             Keyword Args:
                 analysis__status (str): [optional]
                 analysis__status__isnull (bool): [optional]
+                fetch__generated_thumbnail__isnull (bool): [optional]
                 fetch__isnull (bool): [optional]
                 fetch__status (str): [optional]
                 fetch__status__isnull (bool): [optional]
+                fetch__thumbnail__isnull (bool): [optional]
                 limit (int): Number of results to return per page.. [optional]
                 moderation__isnull (bool): [optional]
                 moderation__status (str): [optional]
@@ -751,9 +753,11 @@ class SubmissionsApi(object):
                 'all': [
                     'analysis__status',
                     'analysis__status__isnull',
+                    'fetch__generated_thumbnail__isnull',
                     'fetch__isnull',
                     'fetch__status',
                     'fetch__status__isnull',
+                    'fetch__thumbnail__isnull',
                     'limit',
                     'moderation__isnull',
                     'moderation__status',
@@ -812,11 +816,15 @@ class SubmissionsApi(object):
                         (str,),
                     'analysis__status__isnull':
                         (bool,),
+                    'fetch__generated_thumbnail__isnull':
+                        (bool,),
                     'fetch__isnull':
                         (bool,),
                     'fetch__status':
                         (str,),
                     'fetch__status__isnull':
+                        (bool,),
+                    'fetch__thumbnail__isnull':
                         (bool,),
                     'limit':
                         (int,),
@@ -836,9 +844,11 @@ class SubmissionsApi(object):
                 'attribute_map': {
                     'analysis__status': 'analysis__status',
                     'analysis__status__isnull': 'analysis__status__isnull',
+                    'fetch__generated_thumbnail__isnull': 'fetch__generated_thumbnail__isnull',
                     'fetch__isnull': 'fetch__isnull',
                     'fetch__status': 'fetch__status',
                     'fetch__status__isnull': 'fetch__status__isnull',
+                    'fetch__thumbnail__isnull': 'fetch__thumbnail__isnull',
                     'limit': 'limit',
                     'moderation__isnull': 'moderation__isnull',
                     'moderation__status': 'moderation__status',
@@ -850,9 +860,11 @@ class SubmissionsApi(object):
                 'location_map': {
                     'analysis__status': 'query',
                     'analysis__status__isnull': 'query',
+                    'fetch__generated_thumbnail__isnull': 'query',
                     'fetch__isnull': 'query',
                     'fetch__status': 'query',
                     'fetch__status__isnull': 'query',
+                    'fetch__thumbnail__isnull': 'query',
                     'limit': 'query',
                     'moderation__isnull': 'query',
                     'moderation__status': 'query',

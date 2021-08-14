@@ -464,6 +464,7 @@ with openapi_client.ApiClient(configuration) as api_client:
         title="title_example",
         description="description_example",
         thumbnail="thumbnail_example",
+        generated_thumbnail="generated_thumbnail_example",
         thumbnail_image="thumbnail_image_example",
         fetched_page="fetched_page_example",
     ) # Fetch |  (optional)
@@ -572,9 +573,11 @@ with openapi_client.ApiClient(configuration) as api_client:
     api_instance = submissions_api.SubmissionsApi(api_client)
     analysis__status = "failed" # str |  (optional)
     analysis__status__isnull = True # bool |  (optional)
+    fetch__generated_thumbnail__isnull = True # bool |  (optional)
     fetch__isnull = True # bool |  (optional)
     fetch__status = "fetched" # str |  (optional)
     fetch__status__isnull = True # bool |  (optional)
+    fetch__thumbnail__isnull = True # bool |  (optional)
     limit = 1 # int | Number of results to return per page. (optional)
     moderation__isnull = True # bool |  (optional)
     moderation__status = "accepted" # str |  (optional)
@@ -586,7 +589,7 @@ with openapi_client.ApiClient(configuration) as api_client:
     # example passing only required values which don't have defaults set
     # and optional values
     try:
-        api_response = api_instance.submissions_list(analysis__status=analysis__status, analysis__status__isnull=analysis__status__isnull, fetch__isnull=fetch__isnull, fetch__status=fetch__status, fetch__status__isnull=fetch__status__isnull, limit=limit, moderation__isnull=moderation__isnull, moderation__status=moderation__status, moderation__status__isnull=moderation__status__isnull, offset=offset, ordering=ordering, status=status)
+        api_response = api_instance.submissions_list(analysis__status=analysis__status, analysis__status__isnull=analysis__status__isnull, fetch__generated_thumbnail__isnull=fetch__generated_thumbnail__isnull, fetch__isnull=fetch__isnull, fetch__status=fetch__status, fetch__status__isnull=fetch__status__isnull, fetch__thumbnail__isnull=fetch__thumbnail__isnull, limit=limit, moderation__isnull=moderation__isnull, moderation__status=moderation__status, moderation__status__isnull=moderation__status__isnull, offset=offset, ordering=ordering, status=status)
         pprint(api_response)
     except openapi_client.ApiException as e:
         print("Exception when calling SubmissionsApi->submissions_list: %s\n" % e)
@@ -599,9 +602,11 @@ Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
  **analysis__status** | **str**|  | [optional]
  **analysis__status__isnull** | **bool**|  | [optional]
+ **fetch__generated_thumbnail__isnull** | **bool**|  | [optional]
  **fetch__isnull** | **bool**|  | [optional]
  **fetch__status** | **str**|  | [optional]
  **fetch__status__isnull** | **bool**|  | [optional]
+ **fetch__thumbnail__isnull** | **bool**|  | [optional]
  **limit** | **int**| Number of results to return per page. | [optional]
  **moderation__isnull** | **bool**|  | [optional]
  **moderation__status** | **str**|  | [optional]

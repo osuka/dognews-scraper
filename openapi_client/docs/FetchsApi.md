@@ -74,6 +74,7 @@ with openapi_client.ApiClient(configuration) as api_client:
         title="title_example",
         description="description_example",
         thumbnail="thumbnail_example",
+        generated_thumbnail="generated_thumbnail_example",
         thumbnail_image="thumbnail_image_example",
         fetched_page="fetched_page_example",
     ) # Fetch |  (optional)
@@ -374,6 +375,7 @@ with openapi_client.ApiClient(configuration) as api_client:
         title="title_example",
         description="description_example",
         thumbnail="thumbnail_example",
+        generated_thumbnail="generated_thumbnail_example",
         thumbnail_image="thumbnail_image_example",
         fetched_page="fetched_page_example",
     ) # PatchedFetch |  (optional)
@@ -581,6 +583,7 @@ with openapi_client.ApiClient(configuration) as api_client:
         title="title_example",
         description="description_example",
         thumbnail="thumbnail_example",
+        generated_thumbnail="generated_thumbnail_example",
         thumbnail_image="thumbnail_image_example",
         fetched_page="fetched_page_example",
     ) # Fetch |  (optional)

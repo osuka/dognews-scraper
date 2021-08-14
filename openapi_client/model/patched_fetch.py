@@ -71,6 +71,9 @@ class PatchedFetch(ModelNormal):
         ('thumbnail',): {
             'max_length': 250,
         },
+        ('generated_thumbnail',): {
+            'max_length': 250,
+        },
         ('fetched_page',): {
             'max_length': 61440,
         },
@@ -105,6 +108,7 @@ class PatchedFetch(ModelNormal):
             'title': (str, none_type,),  # noqa: E501
             'description': (str, none_type,),  # noqa: E501
             'thumbnail': (str, none_type,),  # noqa: E501
+            'generated_thumbnail': (str, none_type,),  # noqa: E501
             'thumbnail_image': (str, none_type,),  # noqa: E501
             'fetched_page': (str,),  # noqa: E501
             'last_updated': (datetime,),  # noqa: E501
@@ -123,6 +127,7 @@ class PatchedFetch(ModelNormal):
         'title': 'title',  # noqa: E501
         'description': 'description',  # noqa: E501
         'thumbnail': 'thumbnail',  # noqa: E501
+        'generated_thumbnail': 'generated_thumbnail',  # noqa: E501
         'thumbnail_image': 'thumbnail_image',  # noqa: E501
         'fetched_page': 'fetched_page',  # noqa: E501
         'last_updated': 'last_updated',  # noqa: E501
@@ -180,6 +185,7 @@ class PatchedFetch(ModelNormal):
             title (str, none_type): [optional]  # noqa: E501
             description (str, none_type): [optional]  # noqa: E501
             thumbnail (str, none_type): [optional]  # noqa: E501
+            generated_thumbnail (str, none_type): [optional]  # noqa: E501
             thumbnail_image (str, none_type): [optional]  # noqa: E501
             fetched_page (str): [optional]  # noqa: E501
             last_updated (datetime): [optional]  # noqa: E501
@@ -271,6 +277,7 @@ class PatchedFetch(ModelNormal):
             title (str, none_type): [optional]  # noqa: E501
             description (str, none_type): [optional]  # noqa: E501
             thumbnail (str, none_type): [optional]  # noqa: E501
+            generated_thumbnail (str, none_type): [optional]  # noqa: E501
             thumbnail_image (str, none_type): [optional]  # noqa: E501
             fetched_page (str): [optional]  # noqa: E501
             last_updated (datetime): [optional]  # noqa: E501

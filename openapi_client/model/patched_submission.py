@@ -98,6 +98,7 @@ class PatchedSubmission(ModelNormal):
             'title': (str,),  # noqa: E501
             'description': (str,),  # noqa: E501
             'date': (datetime, none_type,),  # noqa: E501
+            'fetch': (str,),  # noqa: E501
         }
 
     @cached_property
@@ -114,6 +115,7 @@ class PatchedSubmission(ModelNormal):
         'title': 'title',  # noqa: E501
         'description': 'description',  # noqa: E501
         'date': 'date',  # noqa: E501
+        'fetch': 'fetch',  # noqa: E501
     }
 
     read_only_vars = {
@@ -121,6 +123,7 @@ class PatchedSubmission(ModelNormal):
         'url',  # noqa: E501
         'status',  # noqa: E501
         'owner',  # noqa: E501
+        'fetch',  # noqa: E501
     }
 
     _composed_schemas = {}
@@ -169,6 +172,7 @@ class PatchedSubmission(ModelNormal):
             title (str): [optional]  # noqa: E501
             description (str): [optional]  # noqa: E501
             date (datetime, none_type): [optional]  # noqa: E501
+            fetch (str): [optional]  # noqa: E501
         """
 
         _check_type = kwargs.pop('_check_type', True)
@@ -258,6 +262,7 @@ class PatchedSubmission(ModelNormal):
             title (str): [optional]  # noqa: E501
             description (str): [optional]  # noqa: E501
             date (datetime, none_type): [optional]  # noqa: E501
+            fetch (str): [optional]  # noqa: E501
         """
 
         _check_type = kwargs.pop('_check_type', True)

@@ -13,6 +13,7 @@ Name | Type | Description | Notes
 **title** | **str, none_type** |  | [optional] 
 **description** | **str, none_type** |  | [optional] 
 **thumbnail** | **str, none_type** |  | [optional] 
+**generated_thumbnail** | **str, none_type** |  | [optional] 
 **thumbnail_image** | **str, none_type** |  | [optional] 
 **fetched_page** | **str** |  | [optional] 
 **any string name** | **bool, date, datetime, dict, float, int, list, str, none_type** | any string name can be used but the value must be the correct type | [optional]

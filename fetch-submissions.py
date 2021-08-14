@@ -5,45 +5,20 @@
 from typing import List
 
 import sys
-import netrc
-import email
 import hashlib
-import json
-import bz2
 import os
-import traceback
 import argparse
 import urllib3
-
-from datetime import datetime
-
-# beautiful soup 4 (html / xml scraper)
-import bs4
-
-# from email.parser import Parser
-from email.utils import mktime_tz, parsedate_tz
-from pprint import pprint
 from random import choice
-from urllib.parse import parse_qs, urlsplit
-
-# beautiful soup 4 (html / xml scraper)
-import bs4
 
 # http requests
 import requests
 
-# date helpers
-from dateutil.parser import parse as date_parse
+# beautiful soup 4 (html / xml scraper)
+import bs4
 
 # library to summarise articles
 from gensim.summarization import summarize
-
-# pillow - image parsing/generation
-from PIL import Image, ImageOps
-
-# marshmallow - serialization
-from dataclasses import dataclass, field
-from marshmallow import Schema, fields
 
 # backend
 import openapi_client
@@ -183,47 +158,6 @@ def random_headers():
         + "q=0.9,image/webp,*/*;q=0.8",
     }
 
-
-# -------------------------------------------------------------------------------
-
-def generate_thumbnail(image_url:str, fetchobj:Fetch):
-    '''
-    Creates a thumbnail for the image pointed by the URL - if it can't be loaded
-    a 1x1 image used. The thumbnail reference is stored in the news item instance
-
-    It caches images downloaded as they can be referred to from multiple places
-    The cache IDs are based on the URL of the image
-    '''
-    if not image_url:
-        return
-
-    hashName = hashlib.md5(image_url.encode('utf-8')).hexdigest()
-    name = 'images/' + hashName + '.jpg'
-    if os.path.isfile(name):
-        fetchobj["thumbnail"] = f'https://dognewsserver.gatillos.com/media/uploads/{name}'
-        return
-
-    try:
-        print('  - load image ' + image_url + ' [' + hashName + ']')
-        r = requests.get(image_url, timeout=30, stream=True,
-                         headers=random_headers())
-        if r.status_code == 200:
-            img = Image.open(r.raw)
-            img = img.convert('RGB')
-            print('     thumb')
-            new_img = ImageOps.fit(img, (512, 512), Image.ANTIALIAS)
-            print('     save ' + name)
-            new_img.save(name, format='JPEG', quality=85)
-        else:
-            new_img = Image.new('RGB', (1, 1))
-            new_img.save(name, format='JPEG', quality=96)
-    except:
-        print('       bad image')
-        # we save something so it doesn't keep retrying
-        new_img = Image.new('RGB', (1, 1))
-        new_img.save(name, format='JPEG', quality=96)
-    finally:
-        fetchobj["thumbnail"] = f'https://dognewsserver.gatillos.com/static/{name}'
 
 # -------------------------------------------------------------------------------
 
