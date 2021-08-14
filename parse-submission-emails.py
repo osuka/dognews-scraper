@@ -195,17 +195,17 @@ def main(output, token, files):
             if parsed:
                 # += joins the items flat
                 submissions += parsed
+                if output.startswith('http'):
+                    post_articles(output, token, parsed)
                 # mark file as processed
                 name = os.path.basename(filename)
                 os.rename(filename, f'./processed/{name}')
 
     if not output.startswith('http'):
-        # in this case, server is a file name
+        # in this case, server is a file name and we dump all at the same time
         with open(output, 'w') as writer:
             writer.write(json.dumps({"submissions": [s.to_dict() for s in submissions]}, indent=2,
                                     sort_keys=True))  # as json
-    else:
-        post_articles(output, token, submissions)
 
 
 if __name__ == '__main__':

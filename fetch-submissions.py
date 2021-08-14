@@ -78,7 +78,7 @@ badwords = [
     "brain-damaged",
 ]
 
-banned_domains = ["www.goal.com"]
+banned_domains = ["www.goal.com", "uk.news.yahoo.com", "uk.sports.yahoo.com", "www.msn.com"]
 
 # notes on https://docs.python.org/3/library/dataclasses.html, they
 # automatically generate __init__ and __repr__ (like a 'tostring')
