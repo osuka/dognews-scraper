@@ -12,6 +12,8 @@ import sys
 import unittest
 
 import openapi_client
+from openapi_client.model.user import User
+globals()['User'] = User
 from openapi_client.model.patched_submission import PatchedSubmission
 
 

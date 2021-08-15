@@ -7,7 +7,7 @@ Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **url** | **str** |  | [readonly] 
 **target_url** | **str** |  | [readonly] 
-**owner** | **str** |  | [readonly] 
+**owner** | **int** |  | [readonly] 
 **title** | **str** |  | [readonly] 
 **description** | **str** |  | [readonly] 
 **last_updated** | **datetime** |  | [readonly] 

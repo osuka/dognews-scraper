@@ -89,7 +89,7 @@ class Moderation(ModelNormal):
         return {
             'url': (str,),  # noqa: E501
             'target_url': (str,),  # noqa: E501
-            'owner': (str,),  # noqa: E501
+            'owner': (int,),  # noqa: E501
             'title': (str,),  # noqa: E501
             'description': (str,),  # noqa: E501
             'last_updated': (datetime,),  # noqa: E501
@@ -133,7 +133,7 @@ class Moderation(ModelNormal):
         Args:
             url (str):
             target_url (str):
-            owner (str):
+            owner (int):
             title (str):
             description (str):
             last_updated (datetime):

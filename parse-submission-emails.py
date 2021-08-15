@@ -4,6 +4,7 @@
 
 from typing import List
 
+import shutil  # move
 import urllib3
 import sys
 import email
@@ -32,9 +33,10 @@ def get_arguments():
     '''
     parser = argparse.ArgumentParser()
     parser.add_argument('--token', help='Authentication token associated with the submit-bot user, generated in the dognews server app', required=True)
-    parser.add_argument('--output', help='Where to send the output - use https URL to POST '
+    parser.add_argument('--server', help='Where to send the output - use https URL to POST '
                         'to the dognews server API, or a file name to save locally as json',
-                        default='./extracted-news-items.json')
+                        required=True)
+    parser.add_argument('--processedfolder', help='Where to move processed eml files', required=True)
     parser.add_argument('files', nargs='+',
                         help='email filenames and/or directories to traverse '
                         'looking for them')
@@ -170,7 +172,7 @@ def post_articles(server: str, token: str, submissions: List[Submission]):
 
 
 
-def main(output, token, files):
+def main(server, token, files, processedfolder):
 
     startdate = datetime.strptime('17/12/2018', '%d/%m/%Y')
 
@@ -185,9 +187,6 @@ def main(output, token, files):
         for filename in find_email_files(file_folder):
             print('----- ' + filename)
 
-            # with open(filename, 'r') as reader:
-            #     headers = Parser().parse(reader)
-
             with open(filename, 'r') as reader:
                 msg = email.message_from_file(reader)
 
@@ -195,19 +194,19 @@ def main(output, token, files):
             if parsed:
                 # += joins the items flat
                 submissions += parsed
-                if output.startswith('http'):
-                    post_articles(output, token, parsed)
+                if server.startswith('http'):
+                    post_articles(server, token, parsed)
                 # mark file as processed
                 name = os.path.basename(filename)
-                os.rename(filename, f'./processed/{name}')
+                shutil.move(filename, f'{processedfolder}/{name}')
 
-    if not output.startswith('http'):
+    if not server.startswith('http'):
         # in this case, server is a file name and we dump all at the same time
-        with open(output, 'w') as writer:
+        with open(server, 'w') as writer:
             writer.write(json.dumps({"submissions": [s.to_dict() for s in submissions]}, indent=2,
                                     sort_keys=True))  # as json
 
 
 if __name__ == '__main__':
     args = get_arguments()
-    main(output=args.output, token=args.token, files=args.files)
+    main(server=args.server, token=args.token, files=args.files, processedfolder=args.processedfolder)

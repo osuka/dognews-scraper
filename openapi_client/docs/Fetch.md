@@ -6,7 +6,7 @@ The result of a bot retrieving the information
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **url** | **str** |  | [readonly] 
-**owner** | **str** |  | [readonly] 
+**owner** | **int** |  | [readonly] 
 **last_updated** | **datetime** |  | [readonly] 
 **date_created** | **datetime** |  | [readonly] 
 **status** | [**FetchStatusEnum**](FetchStatusEnum.md) |  | [optional] 

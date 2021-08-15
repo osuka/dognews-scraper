@@ -7,7 +7,7 @@ Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **url** | **str** |  | [optional] [readonly] 
 **status** | [**FetchStatusEnum**](FetchStatusEnum.md) |  | [optional] 
-**owner** | **str** |  | [optional] [readonly] 
+**owner** | **int** |  | [optional] [readonly] 
 **title** | **str, none_type** |  | [optional] 
 **description** | **str, none_type** |  | [optional] 
 **thumbnail** | **str, none_type** |  | [optional] 

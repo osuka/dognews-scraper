@@ -104,7 +104,7 @@ class PatchedFetch(ModelNormal):
         return {
             'url': (str,),  # noqa: E501
             'status': (FetchStatusEnum,),  # noqa: E501
-            'owner': (str,),  # noqa: E501
+            'owner': (int,),  # noqa: E501
             'title': (str, none_type,),  # noqa: E501
             'description': (str, none_type,),  # noqa: E501
             'thumbnail': (str, none_type,),  # noqa: E501
@@ -181,7 +181,7 @@ class PatchedFetch(ModelNormal):
                                 _visited_composed_classes = (Animal,)
             url (str): [optional]  # noqa: E501
             status (FetchStatusEnum): [optional]  # noqa: E501
-            owner (str): [optional]  # noqa: E501
+            owner (int): [optional]  # noqa: E501
             title (str, none_type): [optional]  # noqa: E501
             description (str, none_type): [optional]  # noqa: E501
             thumbnail (str, none_type): [optional]  # noqa: E501
@@ -273,7 +273,7 @@ class PatchedFetch(ModelNormal):
                                 _visited_composed_classes = (Animal,)
             url (str): [optional]  # noqa: E501
             status (FetchStatusEnum): [optional]  # noqa: E501
-            owner (str): [optional]  # noqa: E501
+            owner (int): [optional]  # noqa: E501
             title (str, none_type): [optional]  # noqa: E501
             description (str, none_type): [optional]  # noqa: E501
             thumbnail (str, none_type): [optional]  # noqa: E501

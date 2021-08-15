@@ -28,9 +28,6 @@ from openapi_client.model.fetch_status_enum import FetchStatusEnum
 from openapi_client.model.paginated_submission_list import PaginatedSubmissionList
 from openapi_client.models import Submission, Fetch
 
-# to detect/remove duplicates
-usedKeys = set()
-
 # TODO: Minimal sentiment analysis - using simple word triggers in this version
 # https://github.com/linanqiu/word2vec-sentiments
 badwords = [
@@ -66,10 +63,10 @@ def get_arguments():
     """parse provided command line arguments"""
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "--output",
+        "--server",
         help="Where to send the output - use https URL to POST "
         "to the dognews server API, or a file name to save locally as json",
-        default="./extracted-news-items.json",
+        required=True,
     )
     parser.add_argument(
         "--token",
@@ -177,8 +174,6 @@ def fill_in_opengraph_properties(fetchobj:Fetch, soup):
             if prop == 'url':
                 pass
             elif prop == "image":
-                # TODO: Re-enable, maybe separate?
-                # generate_thumbnail(value, fetchobj)
                 fetchobj["thumbnail"] = value
                 pass
             elif prop == "title":
@@ -293,4 +288,4 @@ def main(server, authToken):
 
 if __name__ == "__main__":
     args = get_arguments()
-    main(server=args.output, authToken=args.token)
+    main(server=args.server, authToken=args.token)

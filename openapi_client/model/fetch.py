@@ -103,7 +103,7 @@ class Fetch(ModelNormal):
         lazy_import()
         return {
             'url': (str,),  # noqa: E501
-            'owner': (str,),  # noqa: E501
+            'owner': (int,),  # noqa: E501
             'last_updated': (datetime,),  # noqa: E501
             'date_created': (datetime,),  # noqa: E501
             'status': (FetchStatusEnum,),  # noqa: E501
@@ -150,7 +150,7 @@ class Fetch(ModelNormal):
 
         Args:
             url (str):
-            owner (str):
+            owner (int):
             last_updated (datetime):
             date_created (datetime):
 

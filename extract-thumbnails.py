@@ -48,16 +48,18 @@ def get_arguments():
     """parse provided command line arguments"""
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "--output",
+        "--server",
         help="Where to send the output - use https URL to POST "
         "to the dognews server API, or a file name to save locally as json",
-        default="./extracted-news-items.json",
-    )
+        required=True)
+    parser.add_argument(
+        "--imagefolder",
+        help="Where to save the thumbnails",
+        required=True)
     parser.add_argument(
         "--token",
         help="Authentication token associated with the submit-bot user, generated in the dognews server app",
-        required=True,
-    )
+        required=True)
     return parser.parse_args()
 
 
@@ -150,7 +152,7 @@ def random_headers():
 # -------------------------------------------------------------------------------
 
 
-def generate_thumbnail(fetchobj: Fetch) -> str:
+def generate_thumbnail(imagefolder:str, fetchobj: Fetch) -> str:
     """
     Creates a thumbnail for the image pointed by the URL - if it can't be loaded
     a 1x1 image used. The final thumbnail URL is returned.
@@ -163,9 +165,15 @@ def generate_thumbnail(fetchobj: Fetch) -> str:
         return None
 
     hashName = hashlib.md5(fetchobj.thumbnail.encode("utf-8")).hexdigest()
+
+    if imagefolder == None:
+        print(f"Error, image folder is set to {imagefolder}")
+        return None
+
     # they are saved to a local folder called 'images'
-    name = "images/" + hashName + ".jpg"
-    if os.path.isfile(name):
+    dest = imagefolder
+    name = f"images/" + hashName + ".jpg"
+    if os.path.isfile(f"{dest}/{name}"):
         return f"{name}"
 
     try:
@@ -178,16 +186,16 @@ def generate_thumbnail(fetchobj: Fetch) -> str:
             img = img.convert("RGB")
             print("     thumb")
             new_img = ImageOps.fit(img, (512, 512), Image.ANTIALIAS)
-            print("     save " + name)
-            new_img.save(name, format="JPEG", quality=85)
+            print(f"     save {dest}/{name}")
+            new_img.save(f"{dest}/{name}", format="JPEG", quality=85)
         else:
             new_img = Image.new("RGB", (1, 1))
-            new_img.save(name, format="JPEG", quality=96)
+            new_img.save(f"{dest}/{name}", format="JPEG", quality=96)
     except:
         print("       bad image")
         # we save something so it doesn't keep retrying
         new_img = Image.new("RGB", (1, 1))
-        new_img.save(name, format="JPEG", quality=96)
+        new_img.save(f"{dest}/{name}", format="JPEG", quality=96)
     finally:
         return f"{name}"
 
@@ -195,7 +203,7 @@ def generate_thumbnail(fetchobj: Fetch) -> str:
 # -------------------------------------------------------------------------------
 
 
-def main(server, authToken):
+def main(server: str, imagefolder: str, authToken:str):
 
     configuration = openapi_client.Configuration(host=server)
     configuration.api_key["tokenAuth"] = authToken
@@ -215,8 +223,8 @@ def main(server, authToken):
                 previous = fetchobj.generated_thumbnail
             else:
                 previous = None
-            print(f"  - generating {submission.id}")
-            new_image = generate_thumbnail(fetchobj)
+            print(f"  - generating {submission.id} to save in {imagefolder}")
+            new_image = generate_thumbnail(imagefolder, fetchobj)
             patchedfetch: PatchedFetch = PatchedFetch(generated_thumbnail=new_image)
             if previous != new_image:
                 print(f"  - saving {submission.id} with {patchedfetch.generated_thumbnail}")
@@ -225,4 +233,4 @@ def main(server, authToken):
 
 if __name__ == "__main__":
     args = get_arguments()
-    main(server=args.output, authToken=args.token)
+    main(server=args.server, imagefolder=args.imagefolder, authToken=args.token)

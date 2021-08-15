@@ -8,7 +8,7 @@ Name | Type | Description | Notes
 **url** | **str** |  | [optional] [readonly] 
 **target_url** | **str** |  | [optional] [readonly] 
 **status** | [**ModerationStatusEnum**](ModerationStatusEnum.md) |  | [optional] 
-**owner** | **str** |  | [optional] [readonly] 
+**owner** | **int** |  | [optional] [readonly] 
 **title** | **str** |  | [optional] [readonly] 
 **description** | **str** |  | [optional] [readonly] 
 **last_updated** | **datetime** |  | [optional] [readonly] 

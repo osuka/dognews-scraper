@@ -90,7 +90,7 @@ class PatchedModeration(ModelNormal):
             'url': (str,),  # noqa: E501
             'target_url': (str,),  # noqa: E501
             'status': (ModerationStatusEnum,),  # noqa: E501
-            'owner': (str,),  # noqa: E501
+            'owner': (int,),  # noqa: E501
             'title': (str,),  # noqa: E501
             'description': (str,),  # noqa: E501
             'last_updated': (datetime,),  # noqa: E501
@@ -164,7 +164,7 @@ class PatchedModeration(ModelNormal):
             url (str): [optional]  # noqa: E501
             target_url (str): [optional]  # noqa: E501
             status (ModerationStatusEnum): [optional]  # noqa: E501
-            owner (str): [optional]  # noqa: E501
+            owner (int): [optional]  # noqa: E501
             title (str): [optional]  # noqa: E501
             description (str): [optional]  # noqa: E501
             last_updated (datetime): [optional]  # noqa: E501
@@ -253,7 +253,7 @@ class PatchedModeration(ModelNormal):
             url (str): [optional]  # noqa: E501
             target_url (str): [optional]  # noqa: E501
             status (ModerationStatusEnum): [optional]  # noqa: E501
-            owner (str): [optional]  # noqa: E501
+            owner (int): [optional]  # noqa: E501
             title (str): [optional]  # noqa: E501
             description (str): [optional]  # noqa: E501
             last_updated (datetime): [optional]  # noqa: E501

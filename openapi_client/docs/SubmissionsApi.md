@@ -79,9 +79,18 @@ with openapi_client.ApiClient(configuration) as api_client:
     api_instance = submissions_api.SubmissionsApi(api_client)
     submission = Submission(
         target_url="target_url_example",
+        owner=User(
+            username="A",
+            email="email_example",
+            groups=[
+                1,
+            ],
+        ),
         title="title_example",
         description="description_example",
         date=dateutil_parser('1970-01-01T00:00:00.00Z'),
+        fetch=,
+        moderation=,
     ) # Submission | 
 
     # example passing only required values which don't have defaults set
@@ -992,9 +1001,18 @@ with openapi_client.ApiClient(configuration) as api_client:
     id = 1 # int | A unique integer value identifying this submission.
     patched_submission = PatchedSubmission(
         target_url="target_url_example",
+        owner=User(
+            username="A",
+            email="email_example",
+            groups=[
+                1,
+            ],
+        ),
         title="title_example",
         description="description_example",
         date=dateutil_parser('1970-01-01T00:00:00.00Z'),
+        fetch=,
+        moderation=,
     ) # PatchedSubmission |  (optional)
 
     # example passing only required values which don't have defaults set
@@ -1197,9 +1215,18 @@ with openapi_client.ApiClient(configuration) as api_client:
     id = 1 # int | A unique integer value identifying this submission.
     submission = Submission(
         target_url="target_url_example",
+        owner=User(
+            username="A",
+            email="email_example",
+            groups=[
+                1,
+            ],
+        ),
         title="title_example",
         description="description_example",
         date=dateutil_parser('1970-01-01T00:00:00.00Z'),
+        fetch=,
+        moderation=,
     ) # Submission | 
 
     # example passing only required values which don't have defaults set
